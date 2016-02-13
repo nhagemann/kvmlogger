@@ -383,7 +383,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     }
 
 
-    public function logValue($realm, $type, $subtype, $value, $message = '')
+    public function logValue($realm, $type, $subtype = null, $value, $message = '')
     {
         if (!$message instanceof LogMessage)
         {
@@ -406,7 +406,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
 
         foreach ($this->monitor as $monitor)
         {
-            //ToDO
+            $monitor->saveValue($message);
         }
         foreach ($this->logger as $logger)
         {
@@ -418,7 +418,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     }
 
 
-    public function logCounter($realm, $type, $subtype, $message = '')
+    public function logCounter($realm, $type, $subtype = null, $message = '')
     {
         if (!$message instanceof LogMessage)
         {
@@ -440,7 +440,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
 
         foreach ($this->monitor as $monitor)
         {
-            //ToDO
+            $monitor->count($message);
         }
         foreach ($this->logger as $logger)
         {
@@ -458,7 +458,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     }
 
 
-    public function broadcast($realm, $type, $subtype, $message = '')
+    public function broadcast($realm, $type, $subtype = null, $message = '')
     {
         if (!$message instanceof LogMessage)
         {

@@ -201,6 +201,17 @@ class LogMessage
     }
 
 
+    public function getLogValue($key)
+    {
+        if (array_key_exists($key, $this->additionalLogValues))
+        {
+            return $this->additionalLogValues[$key];
+        }
+
+        return false;
+    }
+
+
     public function __tostring()
     {
         $logValues            = [ ];
@@ -208,14 +219,14 @@ class LogMessage
         $logValues['mode']    = $this->getMode();
         $logValues['message'] = $this->getMessage();
 
-        $logValues['realm'] = $this->getRealm();
+        $logValues['realm']   = $this->getRealm();
         $logValues['type']    = $this->getType();
         $logValues['subtype'] = $this->getSubtype();
 
         $logValues = array_merge($logValues, $this->additionalLogValues);
 
         $logValues['namespace'] = $this->getNamespace();
-        $logValues['chunk'] = $this->getChunk();
+        $logValues['chunk']     = $this->getChunk();
 
         $message = [ ];
         foreach ($logValues as $k => $v)
