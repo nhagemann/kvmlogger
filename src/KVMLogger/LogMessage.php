@@ -5,7 +5,7 @@ namespace KVMLogger;
 class LogMessage
 {
 
-    protected $mode = 'msg';
+    protected $mode = 'message';
 
     protected $chunk = '';
 
@@ -204,8 +204,8 @@ class LogMessage
     public function __tostring()
     {
         $logValues            = [ ];
-        $logValues['mode']    = $this->getMode();
         $logValues['ms']      = $this->getTiming();
+        $logValues['mode']    = $this->getMode();
         $logValues['message'] = $this->getMessage();
 
         $logValues['realm'] = $this->getRealm();

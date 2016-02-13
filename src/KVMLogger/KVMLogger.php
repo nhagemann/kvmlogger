@@ -8,6 +8,7 @@ use Psr\Log\LogLevel;
 
 class KVMLogger extends AbstractLogger implements LoggerInterface
 {
+
     /**
      * @var KVMLogger
      */
@@ -19,7 +20,13 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
 
     protected $logger = [ ];
 
+    protected $monitor = [ ];
+
+    protected $broadCaster = [ ];
+
     protected $stopwatch = [ ];
+
+    protected $namespaceThresholds = [ ];
 
     /**
      * Log Levels
@@ -83,23 +90,27 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     }
 
 
-    /**
-     * @return string
-     */
-    public function getRealm()
+    public function setThresholdForNamespace($namespace, $logLevelThreshold = LogLevel::ERROR)
     {
-        return $this->realm;
+        $this->namespaceThresholds[$namespace] = $this->logLevels[$logLevelThreshold];
     }
 
-
-    /**
-     * @param string $realm
-     */
-    public function setRealm($realm)
-    {
-        $this->realm = $realm;
-    }
-
+//    /**
+//     * @return string
+//     */
+//    public function getRealm()
+//    {
+//        return $this->realm;
+//    }
+//
+//
+//    /**
+//     * @param string $realm
+//     */
+//    public function setRealm($realm)
+//    {
+//        $this->realm = $realm;
+//    }
 
     public function startStopWatch($event)
     {
@@ -110,7 +121,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     public function logDuration($event, $logLevel = LogLevel::DEBUG)
     {
         $logMessage = new LogMessage();
-        $logMessage->setMode('stp');
+        $logMessage->setMode('duration');
         $logMessage->addLogValue('event', $event);
         $logMessage->addLogValue('duration', $this->getDuration($event));
         $this->log($logLevel, $logMessage);
@@ -186,11 +197,15 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
         if (array_key_exists($level, $this->logLevels))
         {
 
-            foreach ($this->logger as $logger)
+            if (!array_key_exists($message->getNamespace(), $this->namespaceThresholds) || $this->namespaceThresholds[$message->getNamespace()] >= $this->logLevels[$level])
             {
-                if ($this->logLevels[$level] <= $this->logLevels[$logger['threshold']])
+
+                foreach ($this->logger as $logger)
                 {
-                    $logger['logger']->log($level, $message, $context);
+                    if ($this->logLevels[$level] >= $this->logLevels[$logger['threshold']])
+                    {
+                        $logger['logger']->log($level, (string)$message, $context);
+                    }
                 }
             }
         }
@@ -200,7 +215,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     public function logRequest($logLevel = LogLevel::DEBUG)
     {
         $message = $this->createLogMessage();
-        $message->setMode('req');
+        $message->setMode('request');
         if (isset($_SERVER['REQUEST_METHOD']))
         {
             $message->addLogValue('method', $_SERVER['REQUEST_METHOD']);
@@ -221,7 +236,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     public function logResources($level = LogLevel::DEBUG)
     {
         $message = $this->createLogMessage();
-        $message->setMode('res');
+        $message->setMode('resource');
         $message->addLogValue('memory', number_format(memory_get_usage(true) / 1048576, 1, '.', ''));
         if (php_sapi_name() == "cli")
         {
@@ -241,26 +256,71 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
                 $message->addLogValue('uri', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
             }
         }
+
         $this->log($level, $message);
     }
 
 
-    public function addLogger(LoggerInterface $logger, $logLevelThreshold = LogLevel::DEBUG, $logMonitoringEvents = true)
+    public function logBeacon($level = LogLevel::DEBUG)
+    {
+        $message = $this->createLogMessage();
+        $message->setMode('beacon');
+        $message->addLogValue('memory', number_format(memory_get_usage(true) / 1048576, 1, '.', ''));
+        if (php_sapi_name() == "cli")
+        {
+            if (isset($_SERVER['SCRIPT_FILENAME']))
+            {
+                $message->addLogValue('script', $_SERVER['SCRIPT_FILENAME']);
+            }
+            if (isset($_SERVER['argv']))
+            {
+                $message->addLogValue('argv', join(' ', $_SERVER['argv']));
+            }
+        }
+        else
+        {
+            if (isset($_SERVER['REQUEST_URI']))
+            {
+                $message->addLogValue('uri', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+            }
+        }
+
+        $backtrace = debug_backtrace();
+
+        if (isset($backtrace[1]['class']))
+        {
+            $message->addLogValue('class', $backtrace[1]['class']);
+        }
+
+        if (isset($backtrace[1]['function']))
+        {
+            $message->addLogValue('function', $backtrace[1]['function']);
+        }
+
+        if (isset($backtrace[0]['file']))
+        {
+            $message->addLogValue('file', $backtrace[0]['file']);
+        }
+
+        if (isset($backtrace[0]['line']))
+        {
+            $message->addLogValue('line', $backtrace[0]['line']);
+        }
+
+        $this->log($level, $message);
+    }
+
+
+    public function addLogger(LoggerInterface $logger, $logLevelThreshold = LogLevel::DEBUG, $logMonitoringEvents = true, $logBroadcastingEvents = true)
     {
         if (array_key_exists($logLevelThreshold, $this->logLevels))
         {
-            $this->logger[] = [ 'logger' => $logger, 'threshold' => $logLevelThreshold, 'monitor' => $logMonitoringEvents ];
+            $this->logger[] = [ 'logger' => $logger, 'threshold' => $logLevelThreshold, 'monitor' => $logMonitoringEvents, 'broadcast' => $logBroadcastingEvents ];
         }
     }
 
 
-    public function addMonitor()
-    {
-
-    }
-
-
-    public function enablePHPExceptionLogging($level = LogLevel::DEBUG, $addContext = false)
+    public function enablePHPExceptionLogging($level = LogLevel::WARNING, $addContext = false)
     {
         $kvmLogger = $this;
 
@@ -294,7 +354,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     }
 
 
-    public function enablePHPErrorLogging($level = LogLevel::DEBUG, $errorTypes = null, $addContext = false)
+    public function enablePHPErrorLogging($level = LogLevel::WARNING, $errorTypes = null, $addContext = false)
     {
         $kvmLogger = $this;
 
@@ -321,6 +381,122 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
             $kvmLogger->log($level, $message, $context);
         }, $errorTypes);
     }
+
+
+    public function logValue($realm, $type, $subtype, $value, $message = '')
+    {
+        if (!$message instanceof LogMessage)
+        {
+            $message = new LogMessage($message);
+
+        }
+        $message->setMode('value');
+        $message->setNamespace($this->getNamespace());
+        $message->setChunk($this->getChunk());
+
+        if ($message->getTiming() == '')
+        {
+            $message->setTiming($this->getDuration());
+        }
+
+        $message->setRealm($realm);
+        $message->setType($type);
+        $message->setSubtype($subtype);
+        $message->addLogValue('value', $value);
+
+        foreach ($this->monitor as $monitor)
+        {
+            //ToDO
+        }
+        foreach ($this->logger as $logger)
+        {
+            if ($logger['monitor'] == true)
+            {
+                $logger['logger']->log('info', (string)$message);
+            }
+        }
+    }
+
+
+    public function logCounter($realm, $type, $subtype, $message = '')
+    {
+        if (!$message instanceof LogMessage)
+        {
+            $message = new LogMessage($message);
+
+        }
+        $message->setMode('counter');
+        $message->setNamespace($this->getNamespace());
+        $message->setChunk($this->getChunk());
+
+        if ($message->getTiming() == '')
+        {
+            $message->setTiming($this->getDuration());
+        }
+
+        $message->setRealm($realm);
+        $message->setType($type);
+        $message->setSubtype($subtype);
+
+        foreach ($this->monitor as $monitor)
+        {
+            //ToDO
+        }
+        foreach ($this->logger as $logger)
+        {
+            if ($logger['monitor'] == true)
+            {
+                $logger['logger']->log('info', (string)$message);
+            }
+        }
+    }
+
+
+    public function addMonitor($monitor)
+    {
+        $this->monitor[] = $monitor;
+    }
+
+
+    public function broadcast($realm, $type, $subtype, $message = '')
+    {
+        if (!$message instanceof LogMessage)
+        {
+            $message = new LogMessage($message);
+
+        }
+        $message->setMode('broadcast');
+        $message->setNamespace($this->getNamespace());
+        $message->setChunk($this->getChunk());
+
+        if ($message->getTiming() == '')
+        {
+            $message->setTiming($this->getDuration());
+        }
+
+        $message->setRealm($realm);
+        $message->setType($type);
+        $message->setSubtype($subtype);
+
+        foreach ($this->broadCaster as $broadCaster)
+        {
+            $broadCaster->broadcast($message);
+        }
+        foreach ($this->logger as $logger)
+        {
+            if ($logger['broadcast'] == true)
+            {
+                $logger['logger']->log('info', (string)$message);
+            }
+        }
+    }
+
+
+    public function addBroadcaster($broadCaster)
+    {
+        $this->broadCaster[] = $broadCaster;
+    }
+
 
     /**
      * @param string $namespace
