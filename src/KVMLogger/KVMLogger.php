@@ -202,7 +202,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
 
                 foreach ($this->logger as $logger)
                 {
-                    if ($this->logLevels[$level] >= $this->logLevels[$logger['threshold']])
+                    if ($this->logLevels[$level] <= $this->logLevels[$logger['threshold']])
                     {
                         $logger['logger']->log($level, (string)$message, $context);
                     }
