@@ -3,9 +3,10 @@
 namespace KVMLogger\Monitor;
 
 use KVMLogger\LogMessage;
+use KVMLogger\MonitorInterface;
 use Symfony\Component\Yaml\Yaml;
 
-class YAMLMonitor
+class YAMLMonitor implements MonitorInterface
 {
 
     protected $filename;
