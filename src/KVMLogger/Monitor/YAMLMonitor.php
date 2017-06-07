@@ -11,7 +11,7 @@ class YAMLMonitor implements MonitorInterface
 
     protected $filename;
 
-    protected $data = [ ];
+    protected $data = [];
 
 
     public function __construct($filename)
@@ -23,11 +23,9 @@ class YAMLMonitor implements MonitorInterface
 
     protected function getYAML()
     {
-        if (!$this->data)
-        {
-            if (file_exists($this->filename))
-            {
-                $yaml       = new Yaml();
+        if (!$this->data) {
+            if (file_exists($this->filename)) {
+                $yaml = new Yaml();
                 $this->data = $yaml->parse(file_get_contents($this->filename));
             }
         }
@@ -48,26 +46,25 @@ class YAMLMonitor implements MonitorInterface
     {
         $c = 1;
 
-        $data = $this->getYAML();
+        try {
+            $data = $this->getYAML();
 
-        if ($message->getSubtype())
-        {
-            if (isset($data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()]))
-            {
-                $c = $data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()] + 1;
+            if ($message->getSubtype()) {
+                if (isset($data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()])) {
+                    $c = $data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()] + 1;
+                }
+                $data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()] = $c;
+            } else {
+                if (isset($data['Counter'][$message->getRealm()][$message->getType()])) {
+                    $c = $data['Counter'][$message->getRealm()][$message->getType()] + 1;
+                }
+                $data['Counter'][$message->getRealm()][$message->getType()] = $c;
             }
-            $data['Counter'][$message->getRealm()][$message->getType()][$message->getSubtype()] = $c;
-        }
-        else
-        {
-            if (isset($data['Counter'][$message->getRealm()][$message->getType()]))
-            {
-                $c = $data['Counter'][$message->getRealm()][$message->getType()] + 1;
-            }
-            $data['Counter'][$message->getRealm()][$message->getType()] = $c;
+            $this->saveYAML($data);
+        } catch (\Exception $e) {
+
         }
 
-        $this->saveYAML($data);
 
         return $c;
     }
@@ -75,17 +72,18 @@ class YAMLMonitor implements MonitorInterface
 
     public function saveValue(LogMessage $message)
     {
-        $data = $this->getYAML();
+        try {
+            $data = $this->getYAML();
 
-        if ($message->getSubtype())
-        {
-            $data['Values'][$message->getRealm()][$message->getType()][$message->getSubtype()] = $message->getLogValue('value');
-        }
-        else
-        {
-            $data['Values'][$message->getRealm()][$message->getType()] = $message->getLogValue('value');
-        }
+            if ($message->getSubtype()) {
+                $data['Values'][$message->getRealm()][$message->getType()][$message->getSubtype()] = $message->getLogValue('value');
+            } else {
+                $data['Values'][$message->getRealm()][$message->getType()] = $message->getLogValue('value');
+            }
 
-        $this->saveYAML($data);
+            $this->saveYAML($data);
+        } catch (\Exception $e) {
+
+        }
     }
 }
