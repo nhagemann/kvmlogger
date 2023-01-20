@@ -6,13 +6,11 @@ use KVMLogger\LogMessage;
 
 class EmailBroadcaster
 {
-
     protected $name;
 
     protected $email;
 
     protected $headers;
-
 
     public function __construct($email, $name = '', $headers = [ ])
     {
@@ -20,7 +18,6 @@ class EmailBroadcaster
         $this->email   = $email;
         $this->headers = $headers;
     }
-
 
     public function broadcast(LogMessage $message)
     {
@@ -32,8 +29,7 @@ class EmailBroadcaster
         $headers[] = "X-Mailer: PHP/" . phpversion();
 
         $subject = 'New Broadcast Event: ' . $message->getRealm() . ' - ' . $message->getType();
-        if ($message->getSubtype())
-        {
+        if ($message->getSubtype()) {
             $subject .= ' - ' . $message->getSubtype();
         }
 
@@ -45,7 +41,5 @@ class EmailBroadcaster
         $text .= $message->getMessage();
 
         mail($to, $subject, $text, implode("\r\n", $headers));
-
     }
-
 }

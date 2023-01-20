@@ -6,7 +6,6 @@ use Psr\Log\LoggerInterface;
 
 class KVMNullLogger extends KVMLogger implements LoggerInterface
 {
-
     /**
      * Logs with an arbitrary level.
      *
@@ -20,5 +19,4 @@ class KVMNullLogger extends KVMLogger implements LoggerInterface
     {
         // do nothing
     }
-
 }

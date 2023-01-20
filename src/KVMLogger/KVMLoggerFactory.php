@@ -7,7 +7,6 @@ use Psr\Log\LogLevel;
 
 class KVMLoggerFactory
 {
-
     /**
      * @param string $namespace
      *
@@ -15,27 +14,23 @@ class KVMLoggerFactory
      */
     public static function create($namespace = 'application')
     {
-        $kvmLogger = new KVMLogger($namespace);
-
-        return $kvmLogger;
+        return new KVMLogger($namespace);
     }
-
 
     /**
      * @param string $realm
      *
      * @return KVMLogger
      */
-    public static function createWithKLogger($path, $logLevelThreshold = LogLevel::DEBUG, $realm = 'application', $options = [ 'filename' => 'kvm.log' ])
+    public static function createWithKLogger($path, $logLevelThreshold = LogLevel::DEBUG, $realm = 'application', $options = ['filename' => 'kvm.log'])
     {
-
         $kLogger = new Logger($path, LogLevel::DEBUG, $options);
 
-        $kvmLogger = new KVMLogger($realm);;
+        $kvmLogger = new KVMLogger($realm);
+        ;
 
         $kvmLogger->addLogger($kLogger, $logLevelThreshold);
 
         return $kvmLogger;
     }
-
 }

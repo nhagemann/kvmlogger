@@ -8,18 +8,14 @@ use Symfony\Component\Yaml\Yaml;
 
 class YAMLMonitor implements MonitorInterface
 {
-
     protected $filename;
 
     protected $data = [];
 
-
     public function __construct($filename)
     {
         $this->filename = $filename;
-
     }
-
 
     protected function getYAML()
     {
@@ -33,14 +29,12 @@ class YAMLMonitor implements MonitorInterface
         return $this->data;
     }
 
-
     protected function saveYAML($data)
     {
         $yaml = new Yaml();
         file_put_contents($this->filename, $yaml->dump($data, 4, 2));
         $this->data = $data;
     }
-
 
     public function count(LogMessage $message)
     {
@@ -62,13 +56,10 @@ class YAMLMonitor implements MonitorInterface
             }
             $this->saveYAML($data);
         } catch (\Exception $e) {
-
         }
-
 
         return $c;
     }
-
 
     public function saveValue(LogMessage $message)
     {
@@ -83,7 +74,6 @@ class YAMLMonitor implements MonitorInterface
 
             $this->saveYAML($data);
         } catch (\Exception $e) {
-
         }
     }
 }

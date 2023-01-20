@@ -4,7 +4,6 @@ namespace KVMLogger;
 
 class LogMessage
 {
-
     protected $mode = 'message';
 
     protected $chunk = '';
@@ -25,13 +24,11 @@ class LogMessage
 
     protected $additionalLogValues = [ ];
 
-
     public function __construct($message = '')
     {
         $this->dateTime = new \DateTime();
         $this->setMessage($message);
     }
-
 
     /**
      * @return string
@@ -41,7 +38,6 @@ class LogMessage
         return $this->namespace;
     }
 
-
     /**
      * @param string $namespace
      */
@@ -49,7 +45,6 @@ class LogMessage
     {
         $this->namespace = $namespace;
     }
-
 
     /**
      * @return string
@@ -59,7 +54,6 @@ class LogMessage
         return $this->mode;
     }
 
-
     /**
      * @param string $method
      */
@@ -67,7 +61,6 @@ class LogMessage
     {
         $this->mode = $method;
     }
-
 
     /**
      * @return string
@@ -77,7 +70,6 @@ class LogMessage
         return $this->chunk;
     }
 
-
     /**
      * @param string $chunk
      */
@@ -85,7 +77,6 @@ class LogMessage
     {
         $this->chunk = $chunk;
     }
-
 
     /**
      * @return mixed
@@ -95,7 +86,6 @@ class LogMessage
         return $this->realm;
     }
 
-
     /**
      * @param mixed $realm
      */
@@ -103,7 +93,6 @@ class LogMessage
     {
         $this->realm = $realm;
     }
-
 
     /**
      * @return mixed
@@ -113,7 +102,6 @@ class LogMessage
         return $this->type;
     }
 
-
     /**
      * @param mixed $type
      */
@@ -121,7 +109,6 @@ class LogMessage
     {
         $this->type = $type;
     }
-
 
     /**
      * @return mixed
@@ -131,7 +118,6 @@ class LogMessage
         return $this->subtype;
     }
 
-
     /**
      * @param mixed $subtype
      */
@@ -139,7 +125,6 @@ class LogMessage
     {
         $this->subtype = $subtype;
     }
-
 
     /**
      * @return mixed
@@ -149,7 +134,6 @@ class LogMessage
         return $this->message;
     }
 
-
     /**
      * @param mixed $message
      */
@@ -157,7 +141,6 @@ class LogMessage
     {
         $this->message = $message;
     }
-
 
     /**
      * @return mixed
@@ -167,7 +150,6 @@ class LogMessage
         return $this->dateTime;
     }
 
-
     /**
      * @param mixed $dateTime
      */
@@ -175,7 +157,6 @@ class LogMessage
     {
         $this->dateTime = $dateTime;
     }
-
 
     /**
      * @return mixed
@@ -185,7 +166,6 @@ class LogMessage
         return $this->timing;
     }
 
-
     /**
      * @param mixed $timing
      */
@@ -194,23 +174,19 @@ class LogMessage
         $this->timing = $timing;
     }
 
-
     public function addLogValue($key, $value)
     {
         $this->additionalLogValues[$key] = $value;
     }
 
-
     public function getLogValue($key)
     {
-        if (array_key_exists($key, $this->additionalLogValues))
-        {
+        if (array_key_exists($key, $this->additionalLogValues)) {
             return $this->additionalLogValues[$key];
         }
 
         return false;
     }
-
 
     public function __tostring()
     {
@@ -229,15 +205,12 @@ class LogMessage
         $logValues['chunk']     = $this->getChunk();
 
         $message = [ ];
-        foreach ($logValues as $k => $v)
-        {
-            if ($v !== '')
-            {
+        foreach ($logValues as $k => $v) {
+            if ($v !== '') {
                 $message[] = $k . '="' . str_replace('"', '\"', $v) . '"';
             }
         }
 
         return join(', ', $message);
-
     }
 }
