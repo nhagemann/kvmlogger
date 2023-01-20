@@ -2,6 +2,7 @@
 
 namespace KVMLogger\Monitor;
 
+use Exception;
 use KVMLogger\LogMessage;
 use KVMLogger\MonitorInterface;
 use Symfony\Component\Yaml\Yaml;
@@ -55,7 +56,7 @@ class YAMLMonitor implements MonitorInterface
                 $data['Counter'][$message->getRealm()][$message->getType()] = $c;
             }
             $this->saveYAML($data);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
 
         return $c;
@@ -73,7 +74,7 @@ class YAMLMonitor implements MonitorInterface
             }
 
             $this->saveYAML($data);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 }

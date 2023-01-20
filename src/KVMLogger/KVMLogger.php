@@ -8,10 +8,7 @@ use Psr\Log\LogLevel;
 
 class KVMLogger extends AbstractLogger implements LoggerInterface
 {
-    /**
-     * @var KVMLogger
-     */
-    private static $instance = null;
+    private static ?KVMLogger $instance = null;
 
     protected $chunk = '';
 
@@ -88,23 +85,6 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
         $this->namespaceThresholds[$namespace] = $this->logLevels[$logLevelThreshold];
     }
 
-//    /**
-//     * @return string
-//     */
-//    public function getRealm()
-//    {
-//        return $this->realm;
-//    }
-//
-//
-//    /**
-//     * @param string $realm
-//     */
-//    public function setRealm($realm)
-//    {
-//        $this->realm = $realm;
-//    }
-
     public function startStopWatch($event)
     {
         $this->stopwatch[$event] = microtime(true);
@@ -153,11 +133,13 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed  $level
-     * @param string $message
-     * @param array  $context
+     * @param mixed   $level
+     * @param string  $message
+     * @param mixed[] $context
      *
-     * @return null
+     * @return void
+     *
+     * @throws \Psr\Log\InvalidArgumentException
      */
     public function log($level, $message, array $context = array())
     {
@@ -293,7 +275,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
         });
     }
 
-    public function enablePHPErrorLogging($level = LogLevel::WARNING, $errorTypes = null, $addContext = false)
+    public function enablePHPErrorLogging($level = LogLevel::WARNING, $errorTypes = null)
     {
         $kvmLogger = $this;
 
@@ -301,7 +283,7 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
             $errorTypes = E_ALL | E_STRICT;
         }
 
-        set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext) use ($kvmLogger, $level, $addContext) {
+        set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) use ($kvmLogger, $level): bool|null {
             $message = $kvmLogger->createLogMessage($errstr);
             $message->setMode('php');
             $message->addLogValue('type', 'error');
@@ -310,15 +292,13 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
             $message->addLogValue('file', $errfile);
             $message->addLogValue('line', $errline);
 
-            $context = [ ];
-            if ($addContext) {
-                $context = ['context' => $errcontext];
-            }
-            $kvmLogger->log($level, $message, $context);
+            $kvmLogger->log($level, $message, []);
+
+            return null;
         }, $errorTypes);
     }
 
-    public function logValue($realm, $type, $subtype = null, $value, $message = '')
+    public function logValue($realm, $type, $subtype = null, $value = '', $message = '')
     {
         if (!$message instanceof LogMessage) {
             $message = new LogMessage($message);

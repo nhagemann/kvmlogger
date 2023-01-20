@@ -2,6 +2,8 @@
 
 namespace KVMLogger;
 
+use DateTime;
+
 class LogMessage
 {
     protected $mode = 'message';
@@ -26,7 +28,7 @@ class LogMessage
 
     public function __construct($message = '')
     {
-        $this->dateTime = new \DateTime();
+        $this->dateTime = new DateTime();
         $this->setMessage($message);
     }
 
