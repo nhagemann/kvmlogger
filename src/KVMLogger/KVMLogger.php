@@ -133,8 +133,8 @@ class KVMLogger extends AbstractLogger implements LoggerInterface
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed   $level
-     * @param string  $message
+     * @param mixed $level
+     * @param LogMessage|string $message
      * @param mixed[] $context
      *
      * @return void
